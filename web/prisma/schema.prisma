@@ -1,0 +1,133 @@
+// 1. Configurações Iniciais
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 2. Enums
+enum Role {
+  USER
+  TECH
+  ADMIN
+}
+
+enum Status {
+  OPEN
+  IN_PROGRESS
+  WAITING_USER
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// 3. Modelos
+
+model Store {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  address   String?
+  phone     String?
+  
+  users     User[]
+  tickets   Ticket[]
+  assets    Asset[]
+
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(USER)
+  department String?
+  
+  storeId   String?  
+  store     Store?   @relation(fields: [storeId], references: [id])
+
+  createdTickets  Ticket[]  @relation("TicketAuthor")
+  assignedTickets Ticket[]  @relation("TicketAssignee")
+  comments        Comment[]
+
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String 
+  
+  tickets Ticket[]
+}
+
+model Asset {
+  id          String   @id @default(cuid())
+  name        String 
+  tag         String   @unique 
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
+  
+  tickets     Ticket[] 
+
+  createdAt   DateTime @default(now())
+}
+
+model Ticket {
+  id          Int      @id @default(autoincrement())
+  
+  title       String
+  description String   @db.Text
+  status      Status   @default(OPEN)
+  priority    Priority @default(LOW)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  closedAt    DateTime? 
+  
+  // --- NOVO: Campos de Prazo (Agora dentro do model corretamente) ---
+  slaDeadline    DateTime? 
+  estimatedTime  DateTime? 
+
+  // Relacionamentos
+  authorId    String
+  author      User     @relation("TicketAuthor", fields: [authorId], references: [id])
+
+  assigneeId  String?
+  assignee    User?    @relation("TicketAssignee", fields: [assigneeId], references: [id])
+
+  storeId     String
+  store       Store    @relation(fields: [storeId], references: [id])
+
+  categoryId  Int
+  category    Category @relation(fields: [categoryId], references: [id])
+
+  assetId     String?
+  asset       Asset?   @relation(fields: [assetId], references: [id])
+
+  comments    Comment[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  internal  Boolean  @default(false)
+  
+  ticketId  Int
+  ticket    Ticket   @relation(fields: [ticketId], references: [id])
+  
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+}
