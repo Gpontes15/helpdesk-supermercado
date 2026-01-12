@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db"
 import Link from "next/link"
 
+export const dynamic = 'force-dynamic'
+
 const priorityColors: Record<string, string> = {
   LOW: "bg-gray-100 text-gray-800",
   MEDIUM: "bg-blue-100 text-blue-800",

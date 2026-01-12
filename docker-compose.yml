@@ -9,9 +9,20 @@ services:
       POSTGRES_PASSWORD: password123
       POSTGRES_DB: helpdesk
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
+  web:
+    container_name: helpdesk_web
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: "postgresql://admin:password123@db:5432/helpdesk?schema=public"
+    depends_on:
+      - db
 volumes:
   postgres_data:

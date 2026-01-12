@@ -52,11 +52,12 @@ model User {
   name      String
   password  String
   role      Role     @default(USER)
-  department String?
+  department String? 
   
   storeId   String?  
   store     Store?   @relation(fields: [storeId], references: [id])
 
+  closedTickets   Ticket[] @relation("TicketCloser")
   createdTickets  Ticket[]  @relation("TicketAuthor")
   assignedTickets Ticket[]  @relation("TicketAssignee")
   comments        Comment[]
@@ -91,13 +92,18 @@ model Ticket {
   status      Status   @default(OPEN)
   priority    Priority @default(LOW)
   
+  closedById    String?
+  closedBy      User?    @relation("TicketCloser", fields: [closedById], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   closedAt    DateTime? 
   
-  // --- NOVO: Campos de Prazo (Agora dentro do model corretamente) ---
+  // Campos de Prazo
   slaDeadline    DateTime? 
   estimatedTime  DateTime? 
+
+  // --- NOVO CAMPO: Solução ---
+  solution       String? @db.Text
 
   // Relacionamentos
   authorId    String

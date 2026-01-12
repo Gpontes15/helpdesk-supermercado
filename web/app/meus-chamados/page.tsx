@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db"
 import Link from "next/link"
 
+export const dynamic = 'force-dynamic'
 export default async function MyTickets() {
   // Pegamos o usuário "fake" Admin (no futuro será o user logado na sessão)
   const user = await prisma.user.findFirst()

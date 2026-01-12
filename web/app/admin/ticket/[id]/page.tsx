@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/db"
 import { revalidatePath } from "next/cache"
-import { closeTicket, reopenTicket } from "@/actions/ticket-actions" // <--- Importante: Importando as ações
+import { closeTicket, reopenTicket } from "@/actions/ticket-actions"
 
-// Action local para atualizar apenas a data
+// Action local para atualizar data
 async function updateTicketDeadline(formData: FormData) {
   'use server'
   const ticketId = parseInt(formData.get('ticketId') as string)
@@ -23,109 +23,124 @@ export default async function AdminTicketDetails({ params }: { params: { id: str
   
   const ticket = await prisma.ticket.findUnique({
     where: { id: parseInt(id) },
-    include: { store: true, author: true }
+    include: { 
+      store: true, 
+      author: true
+    }
   })
 
   if (!ticket) return <div>Chamado não encontrado</div>
 
-  // Verifica se está fechado para mudar a cor da tela
   const isClosed = ticket.status === 'CLOSED'
 
   return (
     <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
+      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
         
-        {/* CABEÇALHO: Fica verde se fechado, escuro se aberto */}
+        {/* Cabeçalho */}
         <div className={`${isClosed ? 'bg-green-700' : 'bg-slate-800'} p-6 text-white flex justify-between items-center`}>
-          <div>
-            <h1 className="text-2xl font-bold">Chamado #{ticket.id}</h1>
-            <p className="text-slate-200 text-sm">{ticket.store.name}</p>
-          </div>
-          <div className="text-right">
-            <span className="bg-white/20 px-2 py-1 rounded font-bold text-sm block mb-1">
-              {ticket.status}
-            </span>
-            <span className="text-red-300 font-bold text-sm">{ticket.priority}</span>
-          </div>
+            <div>
+                <h1 className="text-2xl font-bold">Chamado #{ticket.id}</h1>
+                <p className="opacity-80 text-sm">{ticket.store.name}</p>
+            </div>
+            <div className="text-right">
+                <div className="font-bold border px-2 rounded mb-1 bg-white/20">{ticket.status}</div>
+                <div className="text-sm font-bold text-red-300">{ticket.priority}</div>
+            </div>
         </div>
 
-        <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8">
-          
-          {/* COLUNA ESQUERDA: Detalhes */}
-          <div className="md:col-span-2 space-y-6">
+        <div className="p-6 space-y-6">
             <div>
-              <h3 className="text-gray-500 text-sm uppercase font-bold">Título</h3>
-              <p className="text-xl text-gray-900 font-medium">{ticket.title}</p>
+            <h3 className="text-gray-500 text-sm uppercase font-bold">Problema Relatado</h3>
+            <p className="text-xl text-gray-900 font-medium">{ticket.title}</p>
+            <div className="mt-2 p-3 bg-gray-50 border rounded text-gray-700 whitespace-pre-wrap">
+                {ticket.description}
             </div>
-            
-            <div className="bg-gray-50 p-4 rounded border">
-              <h3 className="text-gray-500 text-sm uppercase font-bold mb-2">Descrição do Usuário</h3>
-              <p className="text-gray-800 whitespace-pre-wrap">{ticket.description}</p>
             </div>
 
             <div>
-              <h3 className="text-gray-500 text-sm uppercase font-bold">Solicitante</h3>
-              <p className="text-gray-800">{ticket.author.name} ({ticket.author.email})</p>
-              <p className="text-gray-500 text-xs font-bold mt-1 uppercase">{ticket.author.department || "Sem setor"}</p>
+            <h3 className="text-gray-500 text-sm uppercase font-bold">Solicitante</h3>
+            <p className="text-gray-800 font-bold">{ticket.author.name}</p>
+            <p className="text-sm text-gray-500">{ticket.author.department || "Sem setor"}</p>
             </div>
-          </div>
 
-          {/* COLUNA DIREITA: Painel de Ações */}
-          <div className="space-y-6">
+            {/* --- ÁREA DE AÇÕES --- */}
+            <div className="border-t pt-6">
             
-            {/* Se estiver FECHADO, mostra aviso e opção de reabrir */}
             {isClosed ? (
-              <div className="bg-green-50 border border-green-200 p-4 rounded-lg text-center">
-                <p className="text-green-800 font-bold text-lg mb-2">✅ Finalizado</p>
-                <p className="text-sm text-green-600 mb-4">
-                  Fechado em: <br/>{ticket.closedAt?.toLocaleString('pt-BR')}
-                </p>
-                
-                <form action={reopenTicket}>
-                  <input type="hidden" name="ticketId" value={ticket.id} />
-                  <button className="text-xs text-gray-500 underline hover:text-black">
-                    Reabrir chamado (Desfazer)
-                  </button>
-                </form>
-              </div>
-            ) : (
-              // Se estiver ABERTO, mostra as ações
-              <>
-                <div className="bg-white p-4 rounded border shadow-sm">
-                  <h3 className="font-bold text-gray-800 mb-3 border-b pb-2">📅 Agendar Prazo</h3>
-                  <form action={updateTicketDeadline} className="space-y-3">
-                    <input type="hidden" name="ticketId" value={ticket.id} />
-                    <input 
-                      type="datetime-local" 
-                      name="deadline"
-                      className="w-full border p-2 rounded text-sm text-black"
-                    />
-                    <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 text-sm font-bold">
-                      Salvar Previsão
-                    </button>
-                  </form>
-                  {ticket.estimatedTime && (
-                    <div className="mt-3 text-xs text-blue-800 bg-blue-50 p-2 rounded">
-                      Previsão atual: <strong>{ticket.estimatedTime.toLocaleString('pt-BR')}</strong>
+                /* --- SE FECHADO: MOSTRA A SOLUÇÃO --- */
+                <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                    <span className="text-2xl">✅</span>
+                    <div>
+                    <p className="text-green-800 font-bold text-lg">Chamado Finalizado</p>
+                    <p className="text-xs text-green-600">
+                        Encerrado em: {ticket.closedAt?.toLocaleString('pt-BR')}
+                    </p>
                     </div>
-                  )}
                 </div>
 
-                {/* BOTÃO DE FECHAR QUE FALTAVA */}
-                <form action={closeTicket}>
-                  <input type="hidden" name="ticketId" value={ticket.id} />
-                  <button 
-                    type="submit" 
-                    className="w-full bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg font-bold shadow-md transition flex flex-col items-center gap-1"
-                  >
-                    <span>✓ Finalizar Chamado</span>
-                    <span className="text-[10px] font-normal opacity-90">Marcar como resolvido</span>
-                  </button>
+                <div className="bg-white p-3 rounded border border-green-100 mt-2">
+                    <p className="text-xs text-gray-500 font-bold uppercase mb-1">Solução Aplicada:</p>
+                    <p className="text-gray-800 whitespace-pre-wrap">{ticket.solution}</p>
+                </div>
+                
+                {/* Botão de Reabrir */}
+                <form action={reopenTicket} className="mt-4 text-center">
+                    <input type="hidden" name="ticketId" value={ticket.id} />
+                    <button className="text-xs text-gray-500 underline hover:text-black">
+                    Reabrir chamado (Desfazer)
+                    </button>
                 </form>
-              </>
+                </div>
+            ) : (
+                /* --- SE ABERTO: MOSTRA FORMULÁRIOS --- */
+                <div className="space-y-6">
+                
+                {/* Agendar Data */}
+                <div className="bg-blue-50 p-4 rounded border border-blue-100">
+                    <form action={updateTicketDeadline} className="flex gap-2 items-end">
+                    <input type="hidden" name="ticketId" value={ticket.id} />
+                    <div className="flex-1">
+                        <label className="block text-xs font-bold text-blue-800 mb-1">Previsão de Atendimento</label>
+                        <input type="datetime-local" name="deadline" className="w-full border p-2 rounded text-sm text-black" />
+                    </div>
+                    <button type="submit" className="bg-blue-600 text-white px-3 py-2 rounded text-sm font-bold hover:bg-blue-700">
+                        Agendar
+                    </button>
+                    </form>
+                    {ticket.estimatedTime && (
+                    <p className="text-xs text-blue-600 mt-2">
+                        Agendado para: <strong>{ticket.estimatedTime.toLocaleString('pt-BR')}</strong>
+                    </p>
+                    )}
+                </div>
+
+                {/* Encerrar Chamado com Solução */}
+                <div className="bg-gray-50 p-4 rounded border border-gray-200 shadow-sm">
+                    <h3 className="font-bold text-gray-800 mb-2">Encerrar Atendimento</h3>
+                    <form action={closeTicket}>
+                    <input type="hidden" name="ticketId" value={ticket.id} />
+                    
+                    <label className="block text-xs text-gray-500 mb-1 font-bold uppercase">O que foi feito para resolver? *</label>
+                    <textarea 
+                        name="solution" 
+                        required 
+                        placeholder="Ex: Trocado cabo de rede, reiniciado servidor..."
+                        className="w-full border p-2 rounded text-sm h-24 mb-3 text-black focus:outline-none focus:ring-2 focus:ring-green-500"
+                    ></textarea>
+
+                    <button 
+                        type="submit" 
+                        className="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded font-bold shadow-md transition flex justify-center gap-2"
+                    >
+                        ✓ Finalizar e Arquivar
+                    </button>
+                    </form>
+                </div>
+                </div>
             )}
-            
-          </div>
+            </div>
         </div>
       </div>
     </div>
