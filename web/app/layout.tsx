@@ -1,29 +1,31 @@
-import "./globals.css"
-import { Inter } from "next/font/google"
-import { Navbar } from "@/components/Navbar" // <--- Importe a Navbar
+"use client"
 
-const inter = Inter({ subsets: ["latin"] })
+import Link from "next/link"
+import { usePathname } from "next/navigation" // Import essencial
 
-export const metadata = {
-  title: "Helpdesk Supermercado",
-  description: "Sistema de Chamados Interno",
-}
+export function Navbar() {
+  const pathname = usePathname()
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+  // --- A MÁGICA ACONTECE AQUI ---
+  // Se a pessoa estiver na tela de login, a barra NÃO é renderizada.
+  // Isso impede que você clique em links restritos antes de logar.
+  if (pathname === "/login" || pathname === "/") {
+    return null
+  }
+  // ------------------------------
+
   return (
-    <html lang="pt-BR">
-      <body className={inter.className}>
-        <Navbar /> {/* <--- Coloque ela aqui, antes do children */}
+    <nav className="bg-slate-900 text-white p-4">
+      <div className="container mx-auto flex justify-between items-center">
+        <div className="font-bold text-xl">HELPDESK</div>
         
-        {/* Adicionei um padding-top (pt-4) para não colar na barra */}
-        <div className="pt-4">
-          {children}
+        {/* Seus links de navegação */}
+        <div className="flex gap-4">
+            <Link href="/admin/chamados">Meus Chamados</Link>
+            <Link href="/admin/usuarios">Cadastrar Usuários</Link>
+            {/* Botão de Sair */}
         </div>
-      </body>
-    </html>
+      </div>
+    </nav>
   )
 }
