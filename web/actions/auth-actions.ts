@@ -12,17 +12,18 @@ export async function login(formData: FormData) {
     where: { email }
   })
 
-  // CORREÇÃO: Em vez de 'return { error }', nós redirecionamos.
-  // Isso resolve o erro de tipagem no formulário.
   if (!user || user.password !== password) {
     redirect('/login?error=invalid') 
   }
 
   const cookieStore = await cookies()
   
+  // CORREÇÃO AQUI:
+  // Mudamos 'secure' para false. Isso obriga o navegador a aceitar o cookie
+  // mesmo que você esteja acessando pelo IP (HTTP) no servidor.
   cookieStore.set('session_user_id', user.id, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // <--- MUDANÇA CRUCIAL: Deixe false para rodar no IP interno
     maxAge: 60 * 60 * 24 * 7, // 7 dias
     path: '/'
   })
@@ -30,7 +31,6 @@ export async function login(formData: FormData) {
   redirect('/')
 }
 
-// ... mantenha as outras funções (logout, getCurrentUser) como estavam
 export async function logout() {
   const cookieStore = await cookies()
   cookieStore.delete('session_user_id')
