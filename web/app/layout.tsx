@@ -1,24 +1,29 @@
-"use client" // <--- Importante: Tem que ser Client Component para ler a rota
+import "./globals.css"
+import { Inter } from "next/font/google"
+import { Navbar } from "@/components/Navbar" // <--- Importe a Navbar
 
-import Link from "next/link"
-import { usePathname } from "next/navigation" // <--- Importe isso
+const inter = Inter({ subsets: ["latin"] })
 
-export function Navbar() {
-  const pathname = usePathname() // <--- Pega a rota atual
+export const metadata = {
+  title: "Helpdesk Supermercado",
+  description: "Sistema de Chamados Interno",
+}
 
-  // Se a rota for exatamente "/login" (ou a rota raiz "/" se for seu login), não mostra nada
-  // Ajuste "/login" conforme a URL exata que aparece no seu navegador
-  if (pathname === "/login" || pathname === "/") {
-    return null
-  }
-
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <nav className="bg-slate-900 text-white p-4">
-      {/* ... todo o resto do seu código da Navbar ... */}
-      <div className="container mx-auto flex justify-between items-center">
-         <h1>HELPDESK</h1>
-         {/* ... menus ... */}
-      </div>
-    </nav>
+    <html lang="pt-BR">
+      <body className={inter.className}>
+        <Navbar /> {/* <--- Coloque ela aqui, antes do children */}
+        
+        {/* Adicionei um padding-top (pt-4) para não colar na barra */}
+        <div className="pt-4">
+          {children}
+        </div>
+      </body>
+    </html>
   )
 }
