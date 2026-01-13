@@ -200,12 +200,15 @@ export default async function UsersPage({
                     defaultValue={userToEdit?.department || ""}
                     className="w-full border p-2 rounded text-black bg-white text-sm"
                   >
-                    <option value="Frente de Caixa">Frente de Caixa</option>
+                    <option value="Frente de loja">Frente de loja</option>
                     <option value="Açougue">Açougue</option>
                     <option value="Padaria">Padaria</option>
                     <option value="Estoque">Estoque</option>
                     <option value="Financeiro">Financeiro</option>
                     <option value="Tecnologia">Tecnologia (TI)</option>
+                    <option value="RH">RH</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Comercial">Comercial</option>
                     <option value="Gerência">Gerência</option>
                   </select>
                 </div>
