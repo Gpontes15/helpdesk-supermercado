@@ -210,6 +210,7 @@ export default async function UsersPage({
                     <option value="Marketing">Marketing</option>
                     <option value="Comercial">Comercial</option>
                     <option value="Gerência">Gerência</option>
+                    <option value="CPD">CPD</option>
                   </select>
                 </div>
 
