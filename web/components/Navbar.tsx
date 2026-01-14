@@ -35,6 +35,11 @@ export async function Navbar() {
                   <Link href="/admin" className="bg-blue-900 hover:bg-blue-800 text-blue-100 px-3 py-2 rounded-md text-sm font-medium border border-blue-700">
                     Gerenciar Fila
                   </Link>
+                  
+                  <Link href="/admin/relatorios" className="hover:bg-slate-700 text-green-200 px-3 py-2 rounded-md text-sm font-medium">
+                    📊 Relatórios
+                  </Link>
+
                   <Link href="/admin/usuarios" className="hover:bg-slate-700 text-yellow-100 px-3 py-2 rounded-md text-sm font-medium">
                     Cadastrar Usuários
                   </Link>
