@@ -22,32 +22,31 @@ export default async function ReportsPage() {
   })
 
   // --- 2. RANKING DE TÉCNICOS (Apenas TI + Chamados Fechados) ---
-  // Buscamos usuários do setor 'Tecnologia' e contamos quantos tickets fechados eles têm
   const techUsers = await prisma.user.findMany({
     where: { 
-      department: 'Tecnologia' // <--- FILTRO IMPORTANTE: Só conta gente de TI
+      department: 'Tecnologia' 
     },
     select: {
       name: true,
       _count: {
         select: { 
-          closedTickets: { where: { status: 'CLOSED' } } // Só conta se o chamado estiver realmente fechado
+          closedTickets: { where: { status: 'CLOSED' } } 
         }
       }
     },
     orderBy: {
-      closedTickets: { _count: 'desc' } // Ordena quem tem mais
+      closedTickets: { _count: 'desc' }
     },
     take: 5
   })
 
-  // Formata os dados para o gráfico
   const techRankingData = techUsers.map(tech => ({
     name: tech.name,
     count: tech._count.closedTickets
   }))
 
   // --- 3. RANKING DE SETORES (Qual setor abre mais) ---
+  // Mantendo sua lógica original de buscar todos e contar no JS (se tiver muitos chamados, ideal é usar groupBy no futuro)
   const allTicketsWithAuthors = await prisma.ticket.findMany({
     select: { author: { select: { department: true } } }
   })
@@ -62,10 +61,32 @@ export default async function ReportsPage() {
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5)
 
-  // --- 4. PROBLEMAS POR PALAVRA-CHAVE ---
+  // --- 4. RANKING DE LOJAS (NOVO) ---
+  // Usando groupBy do Prisma para ser mais rápido
+  const ticketsByStore = await prisma.ticket.groupBy({
+    by: ['storeId'],
+    _count: { id: true },
+    orderBy: { _count: { id: 'desc' } },
+    take: 5
+  })
+
+  // Precisamos buscar os nomes das lojas, pois o groupBy só devolve o ID
+  const allStores = await prisma.store.findMany()
+
+  const storeRanking = ticketsByStore.map(t => {
+    const store = allStores.find(s => s.id === t.storeId)
+    return {
+      name: store?.name || "Loja Desconhecida",
+      count: t._count.id
+    }
+  })
+
+  const topStore = storeRanking[0]
+
+  // --- 5. PROBLEMAS POR PALAVRA-CHAVE ---
   const keywords = [
     'impressora', 'caixa', 'balança', 'carga', 'internet', 
-    'wifi', 'rms', 'syspdv', 'teclado', 'mouse', 'computador', 'pc', 'monitor'
+    'wifi', 'rms', 'syspdv', 'teclado', 'mouse', 'computador', 'pc', 'monitor', 'etiqueta'
   ]
 
   const recentTickets = await prisma.ticket.findMany({
@@ -108,10 +129,12 @@ export default async function ReportsPage() {
             <h3 className="text-blue-100 text-sm font-bold uppercase">Novos (7 dias)</h3>
             <p className="text-4xl font-bold">{ticketsLast7Days}</p>
           </div>
+          
           <div className="bg-white p-6 rounded-lg shadow border-l-4 border-yellow-500">
             <h3 className="text-gray-500 text-sm font-bold uppercase">Fila Pendente</h3>
             <p className="text-4xl font-bold text-yellow-600">{totalOpen}</p>
           </div>
+          
           <div className="bg-white p-6 rounded-lg shadow border-l-4 border-purple-500">
             <h3 className="text-gray-500 text-sm font-bold uppercase">Top Técnico (TI)</h3>
             <p className="text-xl font-bold text-purple-700 truncate">
@@ -121,24 +144,25 @@ export default async function ReportsPage() {
               {techRankingData[0]?.count || 0} resolvidos
             </p>
           </div>
-           <div className="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
-            <h3 className="text-gray-500 text-sm font-bold uppercase">Setor + Crítico</h3>
+           
+          {/* CARD NOVO: LOJA CRÍTICA */}
+          <div className="bg-white p-6 rounded-lg shadow border-l-4 border-red-600">
+            <h3 className="text-gray-500 text-sm font-bold uppercase">Loja + Crítica</h3>
             <p className="text-xl font-bold text-red-700 truncate">
-              {deptRanking[0]?.[0] || "-"}
+              {topStore?.name || "-"}
             </p>
             <p className="text-xs mt-2 text-gray-400">
-              {deptRanking[0]?.[1] || 0} chamados
+              {topStore?.count || 0} chamados
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* --- ÁREA DE RANKINGS --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          {/* --- TABELA 1: QUEM FECHOU MAIS (APENAS TI) --- */}
+          {/* 1. TÉCNICOS */}
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b">🏆 Produtividade Técnica</h2>
-            <p className="text-xs text-gray-400 mb-4">Apenas usuários do setor "Tecnologia"</p>
-            
+            <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b">🏆 Produtividade TI</h2>
             <ul className="space-y-3">
               {techRankingData.map((tech, index) => (
                 <li key={index} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
@@ -146,20 +170,41 @@ export default async function ReportsPage() {
                     <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${index === 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-600'}`}>
                       {index + 1}
                     </span>
-                    <span className="font-medium text-gray-700">{tech.name}</span>
+                    <span className="font-medium text-gray-700 text-sm">{tech.name}</span>
                   </div>
-                  <span className="font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-full text-xs">
-                    {tech.count} resolvidos
+                  <span className="font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded text-xs">
+                    {tech.count}
                   </span>
                 </li>
               ))}
-              {techRankingData.length === 0 && <p className="text-gray-400 text-sm text-center">Nenhum chamado fechado por TI ainda.</p>}
+              {techRankingData.length === 0 && <p className="text-gray-400 text-xs text-center">Sem dados.</p>}
             </ul>
           </div>
 
-          {/* --- TABELA 2: QUEM ABRE MAIS (SETORES) --- */}
+          {/* 2. LOJAS (NOVO) */}
           <div className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b">🏢 Ranking de Solicitações</h2>
+            <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b">🏪 Lojas com Problemas</h2>
+            <ul className="space-y-3">
+              {storeRanking.map((store, index) => (
+                <li key={index} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
+                  <div className="flex items-center gap-3">
+                    <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${index === 0 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
+                      {index + 1}
+                    </span>
+                    <span className="font-medium text-gray-700 text-sm truncate max-w-[120px]" title={store.name}>{store.name}</span>
+                  </div>
+                  <span className="font-bold text-red-600 bg-red-50 px-2 py-1 rounded text-xs">
+                    {store.count}
+                  </span>
+                </li>
+              ))}
+              {storeRanking.length === 0 && <p className="text-gray-400 text-xs text-center">Sem chamados.</p>}
+            </ul>
+          </div>
+
+          {/* 3. SETORES */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b">📂 Setores (Geral)</h2>
             <ul className="space-y-3">
               {deptRanking.map(([deptName, count], index) => (
                 <li key={index} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
@@ -167,37 +212,38 @@ export default async function ReportsPage() {
                     <span className="bg-gray-100 text-gray-600 w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold">
                       {index + 1}
                     </span>
-                    <span className="font-medium text-gray-700">{deptName}</span>
+                    <span className="font-medium text-gray-700 text-sm">{deptName}</span>
                   </div>
-                  <span className="font-bold text-red-600 bg-red-50 px-3 py-1 rounded-full text-xs">
-                    {count} chamados
+                  <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs">
+                    {count}
                   </span>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* --- TABELA 3: TOP PROBLEMAS --- */}
-          <div className="bg-white p-6 rounded-lg shadow lg:col-span-2">
-            <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b">⚠️ Top Problemas (Palavras-Chave)</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {problemRanking.map(([keyword, count], index) => (
-                <div key={index} className="flex justify-between items-center p-4 border rounded hover:shadow-md transition bg-gray-50">
-                  <span className="font-bold text-gray-700 capitalize">{keyword}</span>
-                  <span className="whitespace-nowrap font-bold text-white bg-blue-500 px-3 py-1 rounded-full text-xs shadow-sm">
-                    {count}
-                  </span>
-                </div>
-              ))}
-              {problemRanking.length === 0 && (
-                <p className="col-span-3 text-center text-gray-400 py-4">
-                  Nenhuma palavra-chave identificada recentemente.
-                </p>
-              )}
-            </div>
-          </div>
-
         </div>
+
+        {/* --- TOP PROBLEMAS --- */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h2 className="text-lg font-bold text-gray-800 mb-4 pb-2 border-b">⚠️ Top Problemas (Palavras-Chave)</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {problemRanking.map(([keyword, count], index) => (
+              <div key={index} className="flex flex-col items-center justify-center p-3 border rounded hover:shadow-md transition bg-gray-50 text-center">
+                <span className="font-bold text-gray-700 capitalize text-sm mb-2">{keyword}</span>
+                <span className="font-bold text-white bg-slate-600 px-3 py-1 rounded-full text-xs">
+                  {count}
+                </span>
+              </div>
+            ))}
+            {problemRanking.length === 0 && (
+              <p className="col-span-full text-center text-gray-400 py-4">
+                Nenhuma palavra-chave identificada recentemente.
+              </p>
+            )}
+          </div>
+        </div>
+
       </div>
     </div>
   )

@@ -17,6 +17,9 @@ export async function registerUser(formData: FormData) {
   const password = formData.get('password') as string 
   const department = formData.get('department') as string
   const role = formData.get('role') as 'USER' | 'ADMIN'
+  
+  // --- NOVO: Pegando o ID da loja ---
+  const storeId = formData.get('storeId') as string 
 
   const existingUser = await prisma.user.findUnique({ where: { email } })
   if (existingUser) {
@@ -24,14 +27,22 @@ export async function registerUser(formData: FormData) {
   }
 
   await prisma.user.create({
-    data: { name, email, password, department, role }
+    data: { 
+        name, 
+        email, 
+        password, 
+        department, 
+        role,
+        // Se storeId vier vazio (null ou ""), não salva, senão salva o ID
+        storeId: storeId || null 
+    }
   })
 
   revalidatePath('/admin/usuarios')
   redirect('/admin/usuarios?success=created')
 }
 
-// 2. ATUALIZAR USUÁRIO (NOVO)
+// 2. ATUALIZAR USUÁRIO
 export async function updateUser(formData: FormData) {
   const currentUser = await getCurrentUser()
   if (currentUser?.role !== 'ADMIN') return
@@ -42,13 +53,17 @@ export async function updateUser(formData: FormData) {
   const password = formData.get('password') as string 
   const department = formData.get('department') as string
   const role = formData.get('role') as 'USER' | 'ADMIN'
+  
+  // --- NOVO: Pegando o ID da loja ---
+  const storeId = formData.get('storeId') as string
 
   // Prepara os dados para atualizar
   const dataToUpdate: any = {
     name,
     email,
     department,
-    role
+    role,
+    storeId: storeId || null // Atualiza a loja também
   }
 
   // Só atualiza a senha se o usuário digitou algo novo

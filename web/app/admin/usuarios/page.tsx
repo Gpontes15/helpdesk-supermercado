@@ -15,13 +15,19 @@ export default async function UsersPage({
   const user = await getCurrentUser()
   if (user?.role !== 'ADMIN') redirect('/')
 
-  const allUsers = await prisma.user.findMany({
+  // 1. BUSCAR AS LOJAS NO BANCO
+  const stores = await prisma.store.findMany({
     orderBy: { name: 'asc' }
+  })
+
+  // 2. BUSCAR USUÁRIOS (INCLUINDO A RELAÇÃO COM A LOJA)
+  const allUsers = await prisma.user.findMany({
+    orderBy: { name: 'asc' },
+    include: { store: true } // Importante para pegar o nome da loja
   })
 
   // LÓGICA DE EDIÇÃO
   const editId = params?.edit as string
-  // Se tiver um ID na URL, buscamos esse usuário na lista que já carregamos
   const userToEdit = editId ? allUsers.find(u => u.id === editId) : null
 
   // Mensagens
@@ -78,7 +84,7 @@ export default async function UsersPage({
                   <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b">
                     <tr>
                       <th className="px-6 py-3">Nome</th>
-                      <th className="px-6 py-3">Setor</th>
+                      <th className="px-6 py-3">Loja / Setor</th>
                       <th className="px-6 py-3">Acesso</th>
                       <th className="px-6 py-3 text-right">Ações</th>
                     </tr>
@@ -91,7 +97,15 @@ export default async function UsersPage({
                           <br/>
                           <span className="text-xs text-gray-400 font-normal">{u.email}</span>
                         </td>
-                        <td className="px-6 py-4">{u.department || "-"}</td>
+                        <td className="px-6 py-4">
+                            {/* Mostra Loja em Negrito e Setor embaixo */}
+                            <span className="font-bold text-gray-800 block">
+                                {u.store?.name || "Sem Loja"}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                                {u.department || "Sem setor"}
+                            </span>
+                        </td>
                         <td className="px-6 py-4">
                           {u.role === 'ADMIN' ? (
                             <span className="bg-red-100 text-red-800 text-xs font-bold px-2 py-0.5 rounded">ADMIN</span>
@@ -100,7 +114,7 @@ export default async function UsersPage({
                           )}
                         </td>
                         <td className="px-6 py-4 text-right flex justify-end gap-2 items-center">
-                          {/* BOTÃO EDITAR (Muda a URL) */}
+                          {/* BOTÃO EDITAR */}
                           <Link 
                             href={`/admin/usuarios?edit=${u.id}`}
                             className="text-blue-600 hover:text-blue-900 font-bold hover:underline"
@@ -150,10 +164,8 @@ export default async function UsersPage({
                 </div>
               )}
 
-              {/* O Form muda a Action dependendo se está editando ou não */}
               <form action={userToEdit ? updateUser : registerUser} className="space-y-4">
                 
-                {/* Se estiver editando, precisamos enviar o ID escondido */}
                 {userToEdit && <input type="hidden" name="userId" value={userToEdit.id} />}
 
                 <div>
@@ -186,11 +198,28 @@ export default async function UsersPage({
                   <input 
                     name="password" 
                     type="password" 
-                    // Senha só é obrigatória se for cadastro NOVO
                     required={!userToEdit} 
                     className="w-full border p-2 rounded text-black text-sm" 
                     placeholder={userToEdit ? "Deixe em branco para manter a atual" : "******"} 
                   />
+                </div>
+
+                {/* --- CAMPO NOVO: SELEÇÃO DE LOJA --- */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase">Loja Pertencente</label>
+                  <select 
+                    name="storeId" 
+                    defaultValue={userToEdit?.storeId || ""} 
+                    className="w-full border p-2 rounded text-sm bg-white text-black" 
+                    required
+                  >
+                    <option value="" disabled>Selecione a Loja...</option>
+                    {stores.map(store => (
+                        <option key={store.id} value={store.id}>
+                            {store.name} - {store.code}
+                        </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
