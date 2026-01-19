@@ -14,7 +14,7 @@ async function main() {
     skipDuplicates: true,
   })
 
-  // 2. Criar Lojas (Novas lojas adicionadas)
+  // 2. Criar Lojas
   await prisma.store.createMany({
     data: [
       { code: '001', name: 'Loja Matriz' },
@@ -25,45 +25,54 @@ async function main() {
     skipDuplicates: true,
   })
 
-  // 3. Criar Usuários de Teste
+  // 3. Criar Usuários de Teste (AGORA COM USERNAME)
   const password = "123" // Senha padrão
 
-  // TI
+  // TI - Carlos (Matriz)
   await prisma.user.upsert({
-    where: { email: 'ti@mercado.com' },
-    update: {},
+    where: { username: 'carlos.ti' }, // <--- Busca pelo username
+    update: {
+      store: { connect: { code: '001' } }
+    },
     create: {
-      email: 'ti@mercado.com',
+      username: 'carlos.ti', // <--- Cria com username
       name: 'Carlos (TI)',
       password: password,
       role: 'ADMIN',
-      department: 'Tecnologia'
+      department: 'Tecnologia',
+      store: { connect: { code: '001' } } // Vincula à Matriz
     }
   })
 
-  // Caixa
+  // Caixa - Maria (Matriz)
   await prisma.user.upsert({
-    where: { email: 'caixa@mercado.com' },
-    update: {},
+    where: { username: 'maria.caixa' },
+    update: {
+      store: { connect: { code: '001' } }
+    },
     create: {
-      email: 'caixa@mercado.com',
-      name: 'Maria (Frente de Caixa)',
+      username: 'maria.caixa',
+      name: 'Maria (Frente)',
       password: password,
       role: 'USER',
-      department: 'Frente de Caixa'
+      department: 'Frente de loja',
+      store: { connect: { code: '001' } }
     }
   })
 
-  // Açougue
+  // Açougue - João (Vamos colocar na Filial Baturite para testar relatório)
   await prisma.user.upsert({
-    where: { email: 'acougue@mercado.com' },
-    update: {},
+    where: { username: 'joao.acougue' },
+    update: {
+      store: { connect: { code: '002' } }
+    },
     create: {
-      email: 'acougue@mercado.com',
+      username: 'joao.acougue',
       name: 'João (Açougueiro)',
       password: password,
       role: 'USER',
-      department: 'Açougue'
+      department: 'Açougue',
+      store: { connect: { code: '002' } } // Vincula à Baturite
     }
   })
 
