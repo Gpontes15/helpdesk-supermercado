@@ -5,11 +5,13 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 export async function login(formData: FormData) {
-  const email = formData.get('email') as string
+  // 1. Mudança: Pegamos 'username' em vez de 'email'
+  const username = formData.get('username') as string
   const password = formData.get('password') as string
 
+  // 2. Mudança: Buscamos no banco pelo username
   const user = await prisma.user.findUnique({
-    where: { email }
+    where: { username }
   })
 
   if (!user || user.password !== password) {
@@ -18,12 +20,10 @@ export async function login(formData: FormData) {
 
   const cookieStore = await cookies()
   
-  // CORREÇÃO AQUI:
-  // Mudamos 'secure' para false. Isso obriga o navegador a aceitar o cookie
-  // mesmo que você esteja acessando pelo IP (HTTP) no servidor.
+  // Mantendo sua configuração para funcionar via IP (HTTP)
   cookieStore.set('session_user_id', user.id, {
     httpOnly: true,
-    secure: false, // <--- MUDANÇA CRUCIAL: Deixe false para rodar no IP interno
+    secure: false, // Importante para acesso via IP interno
     maxAge: 60 * 60 * 24 * 7, // 7 dias
     path: '/'
   })
@@ -45,7 +45,7 @@ export async function getCurrentUser() {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { store: true }
+    include: { store: true } // Mantemos a loja para os relatórios
   })
 
   return user
