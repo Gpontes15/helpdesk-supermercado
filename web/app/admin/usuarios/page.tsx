@@ -20,10 +20,10 @@ export default async function UsersPage({
     orderBy: { name: 'asc' }
   })
 
-  // 2. BUSCAR USUÁRIOS (INCLUINDO A RELAÇÃO COM A LOJA)
+  // 2. BUSCAR USUÁRIOS
   const allUsers = await prisma.user.findMany({
     orderBy: { name: 'asc' },
-    include: { store: true } // Importante para pegar o nome da loja
+    include: { store: true } 
   })
 
   // LÓGICA DE EDIÇÃO
@@ -33,7 +33,7 @@ export default async function UsersPage({
   // Mensagens
   const showSuccessCreate = params?.success === 'created'
   const showSuccessUpdate = params?.success === 'updated'
-  const emailExists = params?.error === 'email_exists'
+  const userExists = params?.error === 'username_exists' // Mudou de email_exists
   const selfDeleteError = params?.error === 'self_delete'
   const historyError = params?.error === 'has_history'
 
@@ -95,10 +95,10 @@ export default async function UsersPage({
                         <td className="px-6 py-4 font-medium text-gray-900">
                           {u.name}
                           <br/>
-                          <span className="text-xs text-gray-400 font-normal">{u.email}</span>
+                          {/* CORREÇÃO AQUI: u.username em vez de u.email */}
+                          <span className="text-xs text-gray-400 font-normal">User: {u.username}</span>
                         </td>
                         <td className="px-6 py-4">
-                            {/* Mostra Loja em Negrito e Setor embaixo */}
                             <span className="font-bold text-gray-800 block">
                                 {u.store?.name || "Sem Loja"}
                             </span>
@@ -114,7 +114,6 @@ export default async function UsersPage({
                           )}
                         </td>
                         <td className="px-6 py-4 text-right flex justify-end gap-2 items-center">
-                          {/* BOTÃO EDITAR */}
                           <Link 
                             href={`/admin/usuarios?edit=${u.id}`}
                             className="text-blue-600 hover:text-blue-900 font-bold hover:underline"
@@ -122,7 +121,6 @@ export default async function UsersPage({
                             ✏️ Editar
                           </Link>
 
-                          {/* BOTÃO EXCLUIR */}
                           <form action={deleteUser}>
                             <input type="hidden" name="userId" value={u.id} />
                             <button 
@@ -158,9 +156,9 @@ export default async function UsersPage({
                 )}
               </div>
 
-              {emailExists && (
+              {userExists && (
                 <div className="mb-4 p-2 bg-red-100 text-red-700 rounded text-xs font-bold">
-                  ❌ Email já está em uso.
+                  ❌ Usuário já existe.
                 </div>
               )}
 
@@ -179,15 +177,16 @@ export default async function UsersPage({
                   />
                 </div>
 
+                {/* CAMPO DE USERNAME (Substituindo Email) */}
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase">Email</label>
+                  <label className="block text-xs font-bold text-gray-700 uppercase">Usuário (Login)</label>
                   <input 
-                    name="email" 
-                    type="email" 
+                    name="username" 
+                    type="text" 
                     required 
-                    defaultValue={userToEdit?.email}
+                    defaultValue={userToEdit?.username}
                     className="w-full border p-2 rounded text-black text-sm" 
-                    placeholder="usuario@mercado.com" 
+                    placeholder="ex: maria.caixa" 
                   />
                 </div>
 
@@ -204,7 +203,6 @@ export default async function UsersPage({
                   />
                 </div>
 
-                {/* --- CAMPO NOVO: SELEÇÃO DE LOJA --- */}
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase">Loja Pertencente</label>
                   <select 

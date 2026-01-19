@@ -13,27 +13,24 @@ export async function registerUser(formData: FormData) {
   }
 
   const name = formData.get('name') as string
-  const email = formData.get('email') as string
+  const username = formData.get('username') as string 
   const password = formData.get('password') as string 
   const department = formData.get('department') as string
   const role = formData.get('role') as 'USER' | 'ADMIN'
-  
-  // --- NOVO: Pegando o ID da loja ---
   const storeId = formData.get('storeId') as string 
 
-  const existingUser = await prisma.user.findUnique({ where: { email } })
+  const existingUser = await prisma.user.findUnique({ where: { username } })
   if (existingUser) {
-    redirect('/admin/usuarios?error=email_exists')
+    redirect('/admin/usuarios?error=username_exists')
   }
 
   await prisma.user.create({
     data: { 
         name, 
-        email, 
+        username, 
         password, 
         department, 
         role,
-        // Se storeId vier vazio (null ou ""), não salva, senão salva o ID
         storeId: storeId || null 
     }
   })
@@ -49,24 +46,20 @@ export async function updateUser(formData: FormData) {
 
   const userId = formData.get('userId') as string
   const name = formData.get('name') as string
-  const email = formData.get('email') as string
+  const username = formData.get('username') as string 
   const password = formData.get('password') as string 
   const department = formData.get('department') as string
   const role = formData.get('role') as 'USER' | 'ADMIN'
-  
-  // --- NOVO: Pegando o ID da loja ---
   const storeId = formData.get('storeId') as string
 
-  // Prepara os dados para atualizar
   const dataToUpdate: any = {
     name,
-    email,
+    username,
     department,
     role,
-    storeId: storeId || null // Atualiza a loja também
+    storeId: storeId || null
   }
 
-  // Só atualiza a senha se o usuário digitou algo novo
   if (password && password.trim() !== "") {
     dataToUpdate.password = password
   }

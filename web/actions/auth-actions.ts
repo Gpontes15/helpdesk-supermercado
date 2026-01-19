@@ -5,11 +5,9 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 export async function login(formData: FormData) {
-  // 1. Mudança: Pegamos 'username' em vez de 'email'
   const username = formData.get('username') as string
   const password = formData.get('password') as string
 
-  // 2. Mudança: Buscamos no banco pelo username
   const user = await prisma.user.findUnique({
     where: { username }
   })
@@ -20,10 +18,9 @@ export async function login(formData: FormData) {
 
   const cookieStore = await cookies()
   
-  // Mantendo sua configuração para funcionar via IP (HTTP)
   cookieStore.set('session_user_id', user.id, {
     httpOnly: true,
-    secure: false, // Importante para acesso via IP interno
+    secure: false, 
     maxAge: 60 * 60 * 24 * 7, // 7 dias
     path: '/'
   })
@@ -45,7 +42,7 @@ export async function getCurrentUser() {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    include: { store: true } // Mantemos a loja para os relatórios
+    include: { store: true }
   })
 
   return user
