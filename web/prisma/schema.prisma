@@ -15,11 +15,10 @@ enum Role {
   ADMIN
 }
 
-enum Status {
+// Usaremos este enum atualizado com o status "Em Análise"
+enum TicketStatus {
   OPEN
   IN_PROGRESS
-  WAITING_USER
-  RESOLVED
   CLOSED
 }
 
@@ -47,19 +46,19 @@ model Store {
 }
 
 model User {
-  id         String   @id @default(cuid())
+  id          String   @id @default(cuid())
   
-  username   String   @unique
+  username    String   @unique
   
-  name       String   // Nome de exibição (ex: "Carlos Silva")
-  password   String
-  role       Role     @default(USER)
-  department String? 
+  name        String   // Nome de exibição (ex: "Carlos Silva")
+  password    String
+  role        Role     @default(USER)
+  department  String? 
   
-  storeId    String?  
-  store      Store?   @relation(fields: [storeId], references: [id])
+  storeId     String?  
+  store       Store?   @relation(fields: [storeId], references: [id])
 
-  closedTickets   Ticket[] @relation("TicketCloser")
+  closedTickets   Ticket[]  @relation("TicketCloser")
   createdTickets  Ticket[]  @relation("TicketAuthor")
   assignedTickets Ticket[]  @relation("TicketAssignee")
   comments        Comment[]
@@ -87,55 +86,61 @@ model Asset {
 }
 
 model Ticket {
-  id           Int      @id @default(autoincrement())
+  id             Int      @id @default(autoincrement())
   
-  title        String
-  description  String   @db.Text
-  status       Status   @default(OPEN)
-  priority     Priority @default(LOW)
+  title          String
+  description    String   @db.Text
   
+  priority       Priority @default(LOW)
+  
+  // Status atualizado com a opção IN_PROGRESS
+  status         TicketStatus @default(OPEN)
+
+  // Campo para a mensagem rápida da TI
+  tiResponse     String?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  // Campos de Fechamento
+  closedAt       DateTime? 
   closedById     String?
   closedBy       User?    @relation("TicketCloser", fields: [closedById], references: [id])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  closedAt     DateTime? 
   
-  // Campos de Prazo
+  // Campos de Prazo e Solução
   slaDeadline    DateTime? 
   estimatedTime  DateTime? 
-
-  // --- NOVO CAMPO: Solução ---
   solution       String? @db.Text
 
   // Relacionamentos
-  authorId     String
-  author       User     @relation("TicketAuthor", fields: [authorId], references: [id])
+  authorId       String
+  author         User     @relation("TicketAuthor", fields: [authorId], references: [id])
 
-  assigneeId   String?
-  assignee     User?    @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  assigneeId     String?
+  assignee       User?    @relation("TicketAssignee", fields: [assigneeId], references: [id])
 
-  storeId      String
-  store        Store    @relation(fields: [storeId], references: [id])
+  storeId        String
+  store          Store    @relation(fields: [storeId], references: [id])
 
-  categoryId   Int
-  category     Category @relation(fields: [categoryId], references: [id])
+  categoryId     Int
+  category       Category @relation(fields: [categoryId], references: [id])
 
-  assetId      String?
-  asset        Asset?   @relation(fields: [assetId], references: [id])
+  assetId        String?
+  asset          Asset?   @relation(fields: [assetId], references: [id])
 
-  comments     Comment[]
+  comments       Comment[]
 }
 
 model Comment {
-  id         String   @id @default(cuid())
-  content    String   @db.Text
-  internal   Boolean  @default(false)
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  internal    Boolean  @default(false)
   
-  ticketId   Int
-  ticket     Ticket   @relation(fields: [ticketId], references: [id])
+  ticketId    Int
+  ticket      Ticket   @relation(fields: [ticketId], references: [id])
   
-  authorId   String
-  author     User     @relation(fields: [authorId], references: [id])
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
 
   createdAt DateTime @default(now())
 }

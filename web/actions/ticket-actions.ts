@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/actions/auth-actions"
+import { TicketStatus } from "@prisma/client" // Importação importante para os status
 
 // Validação simples para evitar dados vazios
 const TicketSchema = {
@@ -24,27 +25,19 @@ export async function createTicket(formData: FormData) {
   const priority = formData.get('priority') as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   
   // --- LÓGICA DE SELEÇÃO DE LOJA ---
-  // 1. Tenta pegar a loja enviada pelo Select do formulário
   const formStoreId = formData.get('storeId') as string
-  
-  // 2. Se não tiver (ex: usuário comum), usa a loja do próprio usuário logado
-  // 3. O fallback "|| user.storeId" garante que ninguém fique sem loja
   const finalStoreId = formStoreId || user.storeId
 
   if (!finalStoreId) {
-    // Se chegar aqui, é porque o usuário não tem loja e não selecionou nenhuma.
-    // Você pode redirecionar com erro ou lançar uma exceção.
     throw new Error("Erro Crítico: Não foi possível identificar a loja para este chamado.")
   }
 
   // Validação básica de texto
   if (!TicketSchema.title(title) || !TicketSchema.description(description)) {
-    // Em produção, você retornaria um erro visual, aqui vamos só ignorar/retornar
     return 
   }
 
-  // --- CATEGORIZAÇÃO AUTOMÁTICA (Opcional, mas muito útil) ---
-  // Tenta adivinhar a categoria pelo texto para ajudar nos relatórios depois
+  // --- CATEGORIZAÇÃO AUTOMÁTICA ---
   let categoryId = 5 // ID 5 = Outros (Padrão)
   const text = (title + " " + description).toLowerCase()
   
@@ -58,21 +51,47 @@ export async function createTicket(formData: FormData) {
       title,
       description,
       priority: priority || 'LOW',
-      status: 'OPEN',
+      status: TicketStatus.OPEN, // Usa o Enum
       authorId: user.id,
-      storeId: finalStoreId, // <--- Usa a loja correta aqui
+      storeId: finalStoreId,
       categoryId: categoryId 
     }
   })
 
-  // Revalida as páginas para aparecer o chamado novo na hora
   revalidatePath('/')
   revalidatePath('/meus-chamados')
   revalidatePath('/admin') 
   redirect('/meus-chamados')
 }
 
-// 2. FECHAR CHAMADO
+// 2. ATUALIZAR STATUS E MENSAGEM (NOVA FUNÇÃO)
+export async function updateTicketStatus(formData: FormData) {
+  // Verifica se quem está tentando atualizar é ADMIN
+  const user = await getCurrentUser()
+  if (user?.role !== 'ADMIN' && user?.role !== 'TECH') {
+     return // Ou throw error
+  }
+
+  const ticketId = parseInt(formData.get('ticketId') as string)
+  const newStatus = formData.get('status') as TicketStatus
+  const message = formData.get('tiResponse') as string
+
+  await prisma.ticket.update({
+    where: { id: ticketId },
+    data: {
+      status: newStatus,
+      tiResponse: message || null // Salva a mensagem ou limpa se estiver vazia
+    }
+  })
+
+  // Revalida tudo para que o usuário veja a mudança na hora
+  revalidatePath(`/admin/ticket/${ticketId}`)
+  revalidatePath('/admin')
+  revalidatePath('/meus-chamados')
+  revalidatePath('/')
+}
+
+// 3. FECHAR CHAMADO (COM SOLUÇÃO TÉCNICA)
 export async function closeTicket(formData: FormData) {
   const user = await getCurrentUser()
   
@@ -88,10 +107,10 @@ export async function closeTicket(formData: FormData) {
   await prisma.ticket.update({
     where: { id: ticketId },
     data: {
-      status: 'CLOSED',
+      status: TicketStatus.CLOSED, // Enum
       closedAt: new Date(),
       solution: solution,
-      closedById: user.id // Salva quem fechou para o ranking de produtividade
+      closedById: user.id
     }
   })
 
@@ -101,17 +120,15 @@ export async function closeTicket(formData: FormData) {
   revalidatePath('/admin/relatorios')
 }
 
-// 3. REABRIR CHAMADO
+// 4. REABRIR CHAMADO
 export async function reopenTicket(formData: FormData) {
   const ticketId = parseInt(formData.get('ticketId') as string)
 
   await prisma.ticket.update({
     where: { id: ticketId },
     data: {
-      status: 'IN_PROGRESS',
+      status: TicketStatus.IN_PROGRESS, // Enum: Volta para "Em Análise" para a TI ver
       closedAt: null,
-      // Não limpamos 'closedById' nem 'solution' para manter histórico visual, 
-      // mas a lógica de relatório deve contar apenas status='CLOSED'
     }
   })
 
