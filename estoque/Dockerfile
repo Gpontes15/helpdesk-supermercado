@@ -1,5 +1,5 @@
 # ETAPA 1: Build (Compilar o Java)
-FROM maven:3.8.5-openjdk-17 AS build
+FROM eclipse-temurin:17-jdk-alpine
 WORKDIR /app
 COPY pom.xml .
 # Baixa as dependências (para o cache ficar rápido)
