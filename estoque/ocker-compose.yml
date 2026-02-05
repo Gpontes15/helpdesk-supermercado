@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  # ☕ O seu Backend Java
+  api:
+    build: .
+    container_name: suprimentos-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/suprimentos
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=suasenha # Troque pela senha que quiser
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - db
+    restart: always
+
+  # 🐘 O Banco de Dados Postgres
+  db:
+    image: postgres:15-alpine
+    container_name: suprimentos-db
+    environment:
+      - POSTGRES_DB=suprimentos
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=suasenha # Mesma senha de cima
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres_data:

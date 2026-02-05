@@ -45,6 +45,9 @@ export function Navbar({ user }: { user: any }) {
                   <Link href="/admin/relatorios" className="hover:bg-slate-700 text-green-200 px-3 py-2 rounded-md text-sm font-medium transition">
                     📊 Relatórios
                   </Link>
+                  <Link href="/admin/estoque" className="hover:bg-slate-700 text-orange-200 px-3 py-2 rounded-md text-sm font-medium transition">
+                    📦 Estoque Java
+                  </Link>
                   <Link href="/admin/usuarios" className="hover:bg-slate-700 text-yellow-100 px-3 py-2 rounded-md text-sm font-medium transition">
                     👥 Usuários
                   </Link>
@@ -105,6 +108,9 @@ export function Navbar({ user }: { user: any }) {
                  <Link href="/admin/relatorios" onClick={() => setIsOpen(false)} className="text-green-200 hover:bg-slate-700 block px-3 py-2 rounded-md text-base font-medium">
                     📊 Relatórios
                  </Link>
+                  <Link href="/admin/estoque" className="hover:bg-slate-700 text-orange-200 px-3 py-2 rounded-md text-sm font-medium transition">
+                    📦 Estoque Java
+                  </Link>
                  <Link href="/admin/usuarios" onClick={() => setIsOpen(false)} className="text-yellow-200 hover:bg-slate-700 block px-3 py-2 rounded-md text-base font-medium">
                     👥 Cadastrar Usuários
                  </Link>

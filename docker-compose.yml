@@ -1,5 +1,7 @@
 version: '3.8'
+
 services:
+  # 1. BANCO DE DADOS
   db:
     image: postgres:15-alpine
     container_name: helpdesk_db
@@ -7,11 +9,14 @@ services:
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password123
+      # Dica: O Spring pode criar o banco 'estoque' sozinho se usar o mesmo user
       POSTGRES_DB: helpdesk
     ports:
-      - "5433:5432"
+      - "5433:5432" # Mantive sua porta 5433 externa
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  # 2. HELPDESK (NEXT.JS)
   web:
     container_name: helpdesk_web
     build:
@@ -19,10 +24,33 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "3001:3000"
+      - "3001:3000" # Mantive sua porta 3001 externa
     environment:
+      # Conecta no 'db' internamente na porta padrão 5432
       DATABASE_URL: "postgresql://admin:password123@db:5432/helpdesk?schema=public"
+      # URL para o Next.js conversar com o Estoque (rede interna)
+      API_ESTOQUE_URL: "http://estoque:8080"
     depends_on:
       - db
+
+  # 3. ESTOQUE (SPRING BOOT - NOVO!)
+  estoque:
+    container_name: estoque_api
+    build:
+      context: ./estoque
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      # Conecta no mesmo 'db', mas pode usar um banco lógico diferente se quiser
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://db:5432/helpdesk"
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: password123
+      # Cria tabelas automaticamente
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      - db
+
 volumes:
   postgres_data:
