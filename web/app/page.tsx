@@ -3,6 +3,8 @@ import { TicketForm } from "@/components/TicketForm"
 import { getCurrentUser, logout } from "@/actions/auth-actions"
 import { redirect } from "next/navigation"
 
+export const dynamic = 'force-dynamic'
+
 // Função auxiliar para formatar data (ex: 20/01 às 14:30)
 function formatDate(date: Date) {
   return new Intl.DateTimeFormat('pt-BR', {

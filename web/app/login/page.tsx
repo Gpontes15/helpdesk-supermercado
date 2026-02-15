@@ -1,58 +1,63 @@
-import { login, getCurrentUser } from "@/actions/auth-actions"
-import { redirect } from "next/navigation"
+import { login } from "@/actions/auth-actions"
 
-export default async function LoginPage({ searchParams }: { searchParams: { error?: string } }) {
-  // 1. O PORTEIRO: Verifica se já tem alguém logado
-  const user = await getCurrentUser()
+// Força dinâmico para evitar cache
+export const dynamic = 'force-dynamic'
 
-  // 2. A REGRA: Se já está logado, manda pra casa (Home)
-  if (user) {
-    redirect('/')
-  }
-
-  // Se não estiver logado, mostra o formulário normalmente
+export default function LoginPage() {
   return (
-    <div className="flex items-center justify-center min-h-[80vh]">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center text-gray-800 mb-2">Sistema de Chamados</h1>
-        <p className="text-center text-gray-500 mb-6 text-sm">Faça login para continuar</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-200 p-4">
+      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 border-t-4 border-blue-700">
         
-        {searchParams.error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm text-center">
-            Usuário ou senha incorretos.
-          </div>
-        )}
+        {/* Cabeçalho */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-extrabold text-gray-900">Helpdesk</h1>
+          <p className="text-gray-700 text-base mt-2 font-semibold">Supermercado Redenção</p>
+        </div>
 
-        <form action={login} className="space-y-4">
+        {/* Formulário */}
+        <form action={login} className="space-y-6">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">Usuário</label>
+            <label className="block text-sm font-bold text-gray-900 mb-1">
+              Usuário
+            </label>
             <input 
               name="username" 
               type="text" 
-              placeholder="ex: carlos.ti" 
-              className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
-              required
+              required 
+              autoComplete="username"
+              className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 bg-white text-gray-900 font-medium transition"
+              placeholder="Digite seu usuário..."
             />
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">Senha</label>
+            <label className="block text-sm font-bold text-gray-900 mb-1">
+              Senha
+            </label>
             <input 
               name="password" 
               type="password" 
-              placeholder="******" 
-              className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none text-gray-900"
-              required
+              required 
+              autoComplete="current-password"
+              className="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 bg-white text-gray-900 font-medium transition"
+              placeholder="Sua senha..."
             />
           </div>
 
           <button 
             type="submit" 
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition"
+            className="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold text-lg py-3 rounded-lg transition shadow-md active:scale-95 transform"
           >
-            Entrar
+            ENTRAR
           </button>
         </form>
+
+        {/* Rodapé */}
+        <div className="mt-8 text-center border-t border-gray-200 pt-4">
+          <p className="text-sm text-gray-600 font-medium">
+            Problemas com acesso? Procure a TI.
+          </p>
+        </div>
       </div>
     </div>
   )
