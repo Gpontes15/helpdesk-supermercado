@@ -53,11 +53,6 @@ export default async function LoginPage({ searchParams }: { searchParams: { erro
             Entrar
           </button>
         </form>
-
-        <div className="mt-6 text-center text-xs text-gray-400">
-          <p>Teste: carlos.ti / 123</p>
-          <p>Teste: maria.caixa / 123</p>
-        </div>
       </div>
     </div>
   )

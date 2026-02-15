@@ -13,7 +13,6 @@ export default async function MeusChamadosPage() {
   const user = await getCurrentUser()
   if (!user) redirect('/login')
 
-  // Busca TODOS os chamados do usuário
   const allTickets = await prisma.ticket.findMany({
     where: { authorId: user.id },
     orderBy: { createdAt: 'desc' },
@@ -24,7 +23,7 @@ export default async function MeusChamadosPage() {
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Meus Chamados (Histórico Completo)</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Meus Chamados</h1>
           <Link href="/" className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm font-bold hover:bg-gray-50 shadow-sm transition">
             ← Voltar para Home
           </Link>
@@ -53,38 +52,15 @@ export default async function MeusChamadosPage() {
                     
                     <p className="text-gray-600 mb-4 line-clamp-1">{ticket.description}</p>
 
-                    {/* ÁREA DE STATUS E INFORMAÇÕES EXTRAS */}
                     <div className="flex flex-wrap gap-3 items-center">
-                      
                       {/* STATUS */}
-                      {ticket.status === 'OPEN' && (
-                          <span className="bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-full border border-red-200">
-                            🔴 Aguardando
-                          </span>
-                      )}
-                      {ticket.status === 'IN_PROGRESS' && (
-                          <span className="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-200">
-                            🔵 Em Análise
-                          </span>
-                      )}
-                      {ticket.status === 'CLOSED' && (
-                          <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full border border-green-200">
-                            ✅ Resolvido
-                          </span>
-                      )}
-
-                      {/* DATA AGENDADA */}
-                      {ticket.status === 'IN_PROGRESS' && ticket.estimatedTime && (
-                          <span className="bg-indigo-50 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full border border-indigo-200 flex items-center gap-1">
-                              📅 Agendado: {ticket.estimatedTime.toLocaleString('pt-BR')}
-                          </span>
-                      )}
-
-                      {/* TEM RESPOSTA DA TI? */}
+                      {ticket.status === 'OPEN' && <span className="bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-full border border-red-200">🔴 Aguardando</span>}
+                      {ticket.status === 'IN_PROGRESS' && <span className="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-200">🔵 Em Análise</span>}
+                      {ticket.status === 'CLOSED' && <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full border border-green-200">✅ Resolvido</span>}
+                      
+                      {/* AVISOS */}
                       {ticket.tiResponse && ticket.status !== 'CLOSED' && (
-                          <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded border border-gray-200 flex items-center gap-1">
-                              💬 Tem mensagem da TI
-                          </span>
+                          <span className="bg-gray-100 text-gray-600 text-xs font-bold px-2 py-1 rounded border border-gray-200">💬 Mensagem da TI</span>
                       )}
                     </div>
                   </div>

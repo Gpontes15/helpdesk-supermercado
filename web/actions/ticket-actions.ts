@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/actions/auth-actions"
-import { TicketStatus } from "@prisma/client" // Importação importante para os status
+import { TicketStatus } from "@prisma/client"
 
 // Validação simples para evitar dados vazios
 const TicketSchema = {
@@ -24,7 +24,6 @@ export async function createTicket(formData: FormData) {
   const description = formData.get('description') as string
   const priority = formData.get('priority') as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
   
-  // --- LÓGICA DE SELEÇÃO DE LOJA ---
   const formStoreId = formData.get('storeId') as string
   const finalStoreId = formStoreId || user.storeId
 
@@ -32,13 +31,11 @@ export async function createTicket(formData: FormData) {
     throw new Error("Erro Crítico: Não foi possível identificar a loja para este chamado.")
   }
 
-  // Validação básica de texto
   if (!TicketSchema.title(title) || !TicketSchema.description(description)) {
     return 
   }
 
-  // --- CATEGORIZAÇÃO AUTOMÁTICA ---
-  let categoryId = 5 // ID 5 = Outros (Padrão)
+  let categoryId = 5 
   const text = (title + " " + description).toLowerCase()
   
   if (text.includes('impressora') || text.includes('toner') || text.includes('papel')) categoryId = 4
@@ -51,7 +48,7 @@ export async function createTicket(formData: FormData) {
       title,
       description,
       priority: priority || 'LOW',
-      status: TicketStatus.OPEN, // Usa o Enum
+      status: TicketStatus.OPEN,
       authorId: user.id,
       storeId: finalStoreId,
       categoryId: categoryId 
@@ -64,12 +61,11 @@ export async function createTicket(formData: FormData) {
   redirect('/meus-chamados')
 }
 
-// 2. ATUALIZAR STATUS E MENSAGEM (NOVA FUNÇÃO)
+// 2. ATUALIZAR STATUS E MENSAGEM
 export async function updateTicketStatus(formData: FormData) {
-  // Verifica se quem está tentando atualizar é ADMIN
   const user = await getCurrentUser()
   if (user?.role !== 'ADMIN' && user?.role !== 'TECH') {
-     return // Ou throw error
+     return 
   }
 
   const ticketId = parseInt(formData.get('ticketId') as string)
@@ -80,18 +76,17 @@ export async function updateTicketStatus(formData: FormData) {
     where: { id: ticketId },
     data: {
       status: newStatus,
-      tiResponse: message || null // Salva a mensagem ou limpa se estiver vazia
+      tiResponse: message || null 
     }
   })
 
-  // Revalida tudo para que o usuário veja a mudança na hora
   revalidatePath(`/admin/ticket/${ticketId}`)
   revalidatePath('/admin')
   revalidatePath('/meus-chamados')
   revalidatePath('/')
 }
 
-// 3. FECHAR CHAMADO (COM SOLUÇÃO TÉCNICA)
+// 3. FECHAR CHAMADO
 export async function closeTicket(formData: FormData) {
   const user = await getCurrentUser()
   
@@ -107,7 +102,7 @@ export async function closeTicket(formData: FormData) {
   await prisma.ticket.update({
     where: { id: ticketId },
     data: {
-      status: TicketStatus.CLOSED, // Enum
+      status: TicketStatus.CLOSED, 
       closedAt: new Date(),
       solution: solution,
       closedById: user.id
@@ -127,7 +122,7 @@ export async function reopenTicket(formData: FormData) {
   await prisma.ticket.update({
     where: { id: ticketId },
     data: {
-      status: TicketStatus.IN_PROGRESS, // Enum: Volta para "Em Análise" para a TI ver
+      status: TicketStatus.IN_PROGRESS,
       closedAt: null,
     }
   })
@@ -136,4 +131,21 @@ export async function reopenTicket(formData: FormData) {
   revalidatePath('/admin')
   revalidatePath('/meus-chamados')
   revalidatePath('/admin/relatorios')
+}
+
+// --- NOVA FUNÇÃO: DELETAR CHAMADO ---
+export async function deleteTicket(ticketId: number) {
+  try {
+    await prisma.ticket.delete({
+      where: { id: ticketId }
+    })
+    
+    revalidatePath('/')
+    revalidatePath('/meus-chamados')
+    revalidatePath('/admin')
+    return { success: true }
+  } catch (error) {
+    console.error("Erro ao deletar:", error)
+    return { error: "Erro ao apagar chamado." }
+  }
 }
