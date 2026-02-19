@@ -4,6 +4,9 @@ import { getCurrentUser } from "@/actions/auth-actions"
 import { redirect } from "next/navigation"
 import { DeleteTicketButton } from "@/components/DeleteTicketButton"
 
+// 1. IMPORTAÇÃO DO VIGIA DE NOTIFICAÇÕES AQUI:
+import { NotificationWatcher } from "@/components/NotificationWatcher"
+
 // Força atualização sempre que entrar
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +33,10 @@ export default async function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      
+      {/* 2. COMPONENTE VIGIA TRABALHANDO NOS BASTIDORES */}
+      <NotificationWatcher />
+
       <div className="max-w-7xl mx-auto">
         
         <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
