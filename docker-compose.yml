@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 1. BANCO DE DADOS
   db:
@@ -9,10 +7,10 @@ services:
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password123
-      # Dica: O Spring pode criar o banco 'estoque' sozinho se usar o mesmo user
+      # O banco primário criado junto com o container é o do Next.js
       POSTGRES_DB: helpdesk
     ports:
-      - "5433:5432" # Mantive sua porta 5433 externa
+      - "5433:5432" # A porta 5433 fica exposta para você usar o DBeaver
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -24,16 +22,16 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - "3001:3000" # Mantive sua porta 3001 externa
+      - "3001:3000" # Liberado na porta 3001 para não conflitar no seu SSH
     environment:
-      # Conecta no 'db' internamente na porta padrão 5432
+      # Conecta no 'db' internamente no banco 'helpdesk'
       DATABASE_URL: "postgresql://admin:password123@db:5432/helpdesk?schema=public"
-      # URL para o Next.js conversar com o Estoque (rede interna)
+      # URL para o Next.js conversar com o Estoque na rede interna do Docker
       API_ESTOQUE_URL: "http://estoque:8080"
     depends_on:
       - db
 
-  # 3. ESTOQUE (SPRING BOOT - NOVO!)
+  # 3. ESTOQUE (SPRING BOOT)
   estoque:
     container_name: estoque_api
     build:
@@ -43,11 +41,11 @@ services:
     ports:
       - "8080:8080"
     environment:
-      # Conecta no mesmo 'db', mas pode usar um banco lógico diferente se quiser
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://db:5432/helpdesk"
+      # A MÁGICA AQUI: Conecta no mesmo serviço 'db', mas no banco 'suprimentos'
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://db:5432/suprimentos"
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: password123
-      # Cria tabelas automaticamente
+      # Cria as tabelas do estoque automaticamente
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     depends_on:
       - db
