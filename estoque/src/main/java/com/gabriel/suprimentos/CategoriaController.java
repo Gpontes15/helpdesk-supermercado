@@ -13,13 +13,13 @@ public class CategoriaController {
     @Autowired // Injeção de Dependência: O Spring "entrega" o repository pronto pra usar
     private CategoriaRepository repository;
 
-    // Rota GET: Listar tudo (http://localhost:8080/categorias)
+    // Rota GET: Listar tudo (http://10.200.103.12:8080/categorias)
     @GetMapping
     public List<Categoria> listar() {
         return repository.findAll();
     }
 
-    // Rota POST: Criar nova (http://localhost:8080/categorias)
+    // Rota POST: Criar nova (http://10.200.103.12:8080/categorias)
     @PostMapping
     public Categoria criar(@RequestBody Categoria categoria) {
         return repository.save(categoria);

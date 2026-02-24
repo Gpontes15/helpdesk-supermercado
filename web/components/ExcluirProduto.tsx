@@ -11,7 +11,7 @@ export function ExcluirProduto({ id, nome, onSucesso }: { id: number, nome: stri
 
     setDeleting(true)
     try {
-        const res = await fetch(`http://localhost:8080/produtos/${id}`, { method: 'DELETE' })
+        const res = await fetch(`http://10.200.103.12:8080/produtos/${id}`, { method: 'DELETE' })
         
         if (res.ok) {
             onSucesso() // Sucesso! Atualiza a lista

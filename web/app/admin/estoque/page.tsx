@@ -23,7 +23,7 @@ export default function EstoquePage() {
     try {
       // Adicionamos um timestamp na URL para impedir que o navegador use Cache antigo
       const timestamp = new Date().getTime()
-      const res = await fetch(`http://localhost:8080/produtos?t=${timestamp}`, { 
+      const res = await fetch(`http://10.200.103.12:8080/produtos?t=${timestamp}`, { 
         cache: 'no-store',
         headers: { 'Pragma': 'no-cache' }
       })

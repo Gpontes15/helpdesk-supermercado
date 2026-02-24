@@ -10,7 +10,7 @@ export function HistoricoModal({ produtoId }: { produtoId: number }) {
     setIsOpen(true)
     setLoading(true)
     try {
-      const res = await fetch(`http://localhost:8080/produtos/${produtoId}/historico`)
+      const res = await fetch(`http://10.200.103.12:8080/produtos/${produtoId}/historico`)
       const data = await res.json()
       // Ordena do mais recente para o mais antigo
       setHistorico(data.reverse())

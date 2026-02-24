@@ -12,7 +12,7 @@ export function EditarModal({ produto, onSucesso }: EditarProps) {
   const [minimo, setMinimo] = useState(produto.estoqueMinimo)
 
   async function handleSalvar() {
-    await fetch(`http://localhost:8080/produtos/${produto.id}`, {
+    await fetch(`http://10.200.103.12:8080/produtos/${produto.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome, estoqueMinimo: minimo })
