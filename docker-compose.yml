@@ -42,7 +42,7 @@ services:
       - "8080:8080"
     environment:
       # A MÁGICA AQUI: Conecta no mesmo serviço 'db', mas no banco 'suprimentos'
-      SPRING_DATASOURCE_URL: "jdbc:postgresql://db:5432/suprimentos"
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://db:5432/helpdesk"
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: password123
       # Cria as tabelas do estoque automaticamente
