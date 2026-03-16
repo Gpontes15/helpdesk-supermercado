@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { createTicket } from "@/actions/ticket-actions"
 
-// Definimos o tipo de dado que esperamos receber (Loja)
 type Store = {
   id: string
   name: string
@@ -18,17 +17,39 @@ const slaInfo = {
 
 export function TicketForm({ stores }: { stores: Store[] }) {
   const [priority, setPriority] = useState("LOW")
+  const [loading, setLoading] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault() // 🛑 O FREIO ABSOLUTO DO NAVEGADOR
+    setLoading(true)
+
+    try {
+      const formData = new FormData(e.currentTarget)
+      
+      // Chamamos a função do servidor manualmente
+      await createTicket(formData)
+      
+    } catch (error: any) {
+      // O Next.js usa erros debaixo dos panos para fazer o redirect, então ignoramos ele
+      if (error?.message !== 'NEXT_REDIRECT') {
+        console.error("ERRO CAPTURADO:", error)
+        alert("O servidor recusou o chamado! Aperte F12, vá no Console e veja o erro vermelho.")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
-    <form action={createTicket} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700">Título</label>
-        <input name="title" required className="mt-1 block w-full border border-gray-300 p-2 rounded text-black" placeholder="Ex: Erro no Caixa" />
+        <input name="title" required className="mt-1 block w-full border border-gray-300 p-2 rounded text-black outline-none focus:border-blue-500" placeholder="Ex: Erro no Caixa" />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Loja</label>
-        <select name="storeId" className="mt-1 block w-full border border-gray-300 p-2 rounded text-black">
+        <select name="storeId" className="mt-1 block w-full border border-gray-300 p-2 rounded text-black outline-none focus:border-blue-500">
           {stores.map((store) => (
             <option key={store.id} value={store.id}>
               {store.name}
@@ -43,7 +64,7 @@ export function TicketForm({ stores }: { stores: Store[] }) {
           name="priority" 
           value={priority}
           onChange={(e) => setPriority(e.target.value)}
-          className="mt-1 block w-full border border-gray-300 p-2 rounded text-black bg-white"
+          className="mt-1 block w-full border border-gray-300 p-2 rounded text-black bg-white outline-none focus:border-blue-500"
         >
           <option value="LOW">Baixa</option>
           <option value="MEDIUM">Média</option>
@@ -59,11 +80,11 @@ export function TicketForm({ stores }: { stores: Store[] }) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Descrição</label>
-        <textarea name="description" required className="mt-1 block w-full border border-gray-300 p-2 rounded text-black" rows={3}></textarea>
+        <textarea name="description" required className="mt-1 block w-full border border-gray-300 p-2 rounded text-black outline-none focus:border-blue-500" rows={3}></textarea>
       </div>
 
-      <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 font-bold">
-        Salvar Chamado
+      <button type="submit" disabled={loading} className={`w-full text-white p-2 rounded font-bold transition ${loading ? 'bg-gray-400 cursor-wait' : 'bg-blue-600 hover:bg-blue-700'}`}>
+        {loading ? 'Salvando Chamado...' : 'Salvar Chamado'}
       </button>
     </form>
   )
