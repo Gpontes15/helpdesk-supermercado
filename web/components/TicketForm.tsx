@@ -18,33 +18,39 @@ const slaInfo = {
 export function TicketForm({ stores }: { stores: Store[] }) {
   const [priority, setPriority] = useState("LOW")
   const [loading, setLoading] = useState(false)
+  
+  // NOVO: Estado para "escutar" o que o usuário digita na descrição
+  const [description, setDescription] = useState("")
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault() // 🛑 O FREIO ABSOLUTO DO NAVEGADOR
+    e.preventDefault()
     setLoading(true)
 
     try {
       const formData = new FormData(e.currentTarget)
-      
-      // Chamamos a função do servidor manualmente
       await createTicket(formData)
-      
     } catch (error: any) {
-      // O Next.js usa erros debaixo dos panos para fazer o redirect, então ignoramos ele
       if (error?.message !== 'NEXT_REDIRECT') {
-        console.error("ERRO CAPTURADO:", error)
-        alert("O servidor recusou o chamado! Aperte F12, vá no Console e veja o erro vermelho.")
+        alert(error.message || "Erro ao salvar chamado.")
       }
     } finally {
       setLoading(false)
     }
   }
 
+  // A nossa regra de negócio do arquivo de actions (> 5)
+  const isDescriptionValid = description.length > 5
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700">Título</label>
-        <input name="title" required className="mt-1 block w-full border border-gray-300 p-2 rounded text-black outline-none focus:border-blue-500" placeholder="Ex: Erro no Caixa" />
+        <input 
+          name="title" 
+          required 
+          className="mt-1 block w-full border border-gray-300 p-2 rounded text-black outline-none focus:border-blue-500" 
+          placeholder="Ex: Erro no Caixa" 
+        />
       </div>
 
       <div>
@@ -80,10 +86,36 @@ export function TicketForm({ stores }: { stores: Store[] }) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Descrição</label>
-        <textarea name="description" required className="mt-1 block w-full border border-gray-300 p-2 rounded text-black outline-none focus:border-blue-500" rows={3}></textarea>
+        <textarea 
+          name="description" 
+          required 
+          value={description}
+          onChange={(e) => setDescription(e.target.value)} // Atualiza as letras em tempo real
+          className="mt-1 block w-full border border-gray-300 p-2 rounded text-black outline-none focus:border-blue-500" 
+          rows={3}
+          placeholder="Detalhe o problema ao máximo..."
+        ></textarea>
+        
+        {/* NOVO: O contador visual dinâmico */}
+        <div className="mt-1 flex justify-end">
+          <span className={`text-xs font-bold transition-colors ${isDescriptionValid ? 'text-green-600' : 'text-red-500'}`}>
+            {isDescriptionValid 
+              ? '✅ Tamanho excelente!' 
+              : `Mínimo de 6 caracteres (Digitado: ${description.length})`}
+          </span>
+        </div>
       </div>
 
-      <button type="submit" disabled={loading} className={`w-full text-white p-2 rounded font-bold transition ${loading ? 'bg-gray-400 cursor-wait' : 'bg-blue-600 hover:bg-blue-700'}`}>
+      {/* NOVO: O botão agora analisa se a descrição é válida antes de liberar o clique */}
+      <button 
+        type="submit" 
+        disabled={loading || !isDescriptionValid} 
+        className={`w-full text-white p-2 rounded font-bold transition ${
+          (loading || !isDescriptionValid) 
+            ? 'bg-gray-400 cursor-not-allowed' 
+            : 'bg-blue-600 hover:bg-blue-700'
+        }`}
+      >
         {loading ? 'Salvando Chamado...' : 'Salvar Chamado'}
       </button>
     </form>
