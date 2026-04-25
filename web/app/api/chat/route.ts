@@ -13,24 +13,28 @@ export async function POST(request: Request) {
     const chamados = await prisma.ticket.findMany({
       include: { store: true },
       orderBy: { createdAt: 'desc' },
-      take: 50 
+      take: 150 
     });
 
     const usuarios = await prisma.user.findMany({
       select: { id: true, name: true, username: true, role: true, department: true, store: { select: { name: true } } }
     });
 
-    // 2. Mapeia TUDO (incluindo descrição e a solução aplicada pela TI)
-    const contextoChamados = chamados.map(t => 
-      `[Chamado #${t.id}]
+    // 2. Mapeia e TRADUZ os dados para a IA não se perder
+    const contextoChamados = chamados.map(t => {
+      // Tradutor interno
+      const statusTraduzido = t.status === 'OPEN' ? 'ABERTO' : 
+                              t.status === 'IN_PROGRESS' ? 'EM ANÁLISE' : 'FECHADO';
+
+      return `[Chamado #${t.id}]
       Loja: ${t.store?.name || 'Sem Loja'}
-      Status: ${t.status}
+      Status: ${statusTraduzido}
       Urgência: ${t.priority}
       Título: ${t.title}
-      Descrição detalhada: ${t.description || 'Sem descrição'}
-      Solução da TI: ${t.tiResponse || 'Ainda não há solução registrada'}
-      -------------------`
-    ).join('\n');
+      Descrição: ${t.description || 'Sem descrição'}
+      Solução da TI: ${t.tiResponse || t.solution || 'Ainda sem solução'}
+      -------------------`;
+    }).join('\n');
 
     const contextoUsuarios = usuarios.map(u => 
       `[Usuário] Nome: ${u.name} | Cargo: ${u.role} | Setor: ${u.department} | Loja: ${u.store?.name || 'Geral'}`
