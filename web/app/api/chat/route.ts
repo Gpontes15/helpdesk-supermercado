@@ -53,6 +53,7 @@ export async function POST(request: Request) {
       1. Assuma que QUALQUER pergunta se refere ao ambiente do Helpdesk e da empresa.
       2. NUNCA use formatação Markdown. NÃO use asteriscos (**) para negrito. Escreva em texto 100% limpo. Se precisar destacar algo, use LETRAS MAIÚSCULAS. Se precisar fazer lista, use apenas hífens (-).
       3. Seja direto. Pareça um colega de TI conversando, não um robô corporativo.
+      4. INTELIGÊNCIA DE AGRUPAMENTO: Ignore acentos, espaços extras e letras maiúsculas/minúsculas ao analisar nomes, setores ou categorias. Trate "INVENTÁRIO" e "INVENTARIO" como a mesma coisa e some os totais. Trate "gabriel", "Gabriel" e "GABRIEL" como a mesma pessoa. Use a sua inteligência semântica para cruzar dados semelhantes!
       
       --- MEMÓRIA DA CONVERSA ---
       ${historicoTexto}
