@@ -35,9 +35,16 @@ export function Navbar({ user }: { user: any }) {
               </Link>
 
               {isTech && (
-                 <Link href="/admin" className="bg-blue-900 hover:bg-blue-800 text-blue-100 px-3 py-2 rounded-md text-sm font-medium border border-blue-700 transition">
-                    Gerenciar Fila
-                 </Link>
+                 <>
+                   <Link href="/admin" className="bg-blue-900 hover:bg-blue-800 text-blue-100 px-3 py-2 rounded-md text-sm font-medium border border-blue-700 transition">
+                      Gerenciar Fila
+                   </Link>
+                   
+                   {/* NOVO: Botão da IA no Desktop */}
+                   <Link href="/ia" className="bg-indigo-900 hover:bg-indigo-800 text-indigo-100 px-3 py-2 rounded-md text-sm font-medium border border-indigo-700 transition flex items-center gap-2">
+                      🤖 Assistente IA
+                   </Link>
+                 </>
               )}
 
               {isAdmin && (
@@ -98,9 +105,16 @@ export function Navbar({ user }: { user: any }) {
             </Link>
 
             {isTech && (
-               <Link href="/admin" onClick={() => setIsOpen(false)} className="bg-blue-900/40 text-blue-200 hover:bg-blue-900 block px-3 py-2 rounded-md text-base font-medium">
-                  🔧 Gerenciar Fila (Técnico)
-               </Link>
+               <>
+                 <Link href="/admin" onClick={() => setIsOpen(false)} className="bg-blue-900/40 text-blue-200 hover:bg-blue-900 block px-3 py-2 rounded-md text-base font-medium">
+                    🔧 Gerenciar Fila (Técnico)
+                 </Link>
+
+                 {/* NOVO: Botão da IA no Mobile */}
+                 <Link href="/ia" onClick={() => setIsOpen(false)} className="bg-indigo-900/40 text-indigo-200 hover:bg-indigo-900 block px-3 py-2 rounded-md text-base font-medium flex items-center gap-2">
+                    🤖 Assistente IA
+                 </Link>
+               </>
             )}
 
             {isAdmin && (
